@@ -24,6 +24,7 @@ import backtype.storm.utils.Utils;
 
 public class TwitterStreamSpout extends BaseRichSpout {
 	private static final long serialVersionUID = 5173509952980902144L;
+	private static Logger logger = null;
 	private LinkedBlockingQueue<Status> queue = null;
 	private final int queueCapacity = 1024;
 	private SpoutOutputCollector collector = null;
@@ -32,8 +33,8 @@ public class TwitterStreamSpout extends BaseRichSpout {
 	private String consumerSecret = null;
 	private String accessToken = null;
 	private String accessTokenSecret = null;
-	private Logger logger = null;
 
+	@SuppressWarnings("static-access")
 	public TwitterStreamSpout(String consumerKey, String consumerSecret,
 			String accessToken, String accessTokenSecret) {
 		this.consumerKey = consumerKey;
