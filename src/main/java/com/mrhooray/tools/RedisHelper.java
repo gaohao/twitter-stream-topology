@@ -5,6 +5,8 @@ import java.io.Serializable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.gson.Gson;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;
@@ -28,6 +30,7 @@ public class RedisHelper implements Serializable {
 		if (jedis.zrank(key, member) != null) {
 			Transaction tran = jedis.multi();
 			tran.zadd(key, (double) score, member);
+			addStatus(tran, status);
 			tran.exec();
 		} else {
 			if (jedis.zcount(key, -1, Double.MAX_VALUE) >= capacity) {
@@ -37,12 +40,15 @@ public class RedisHelper implements Serializable {
 				if (score > loweast) {
 					Transaction tran = jedis.multi();
 					tran.zremrangeByRank(key, 0, 0);
+					removeStatus(tran, status);
 					tran.zadd(key, (double) score, member);
+					addStatus(tran, status);
 					tran.exec();
 				}
 			} else {
 				Transaction tran = jedis.multi();
 				tran.zadd(key, (double) score, member);
+				addStatus(tran, status);
 				tran.exec();
 			}
 		}
@@ -51,11 +57,12 @@ public class RedisHelper implements Serializable {
 	}
 
 	private static void addStatus(Transaction tran, Status status) {
-		logger.info("yay");
+		Gson gson = new Gson();
+		tran.set("global:status:" + status.getId(), gson.toJson(status));
 	}
 
 	private static void removeStatus(Transaction tran, Status status) {
-
+		tran.del("global:status:" + status.getId());
 	}
 
 	public static void destroy(JedisPool pool) {

@@ -28,7 +28,7 @@ public class TwitterStreamTopology {
 		builder.setBolt("filter-retweet-bolt", new FilterRetweetBolt())
 				.shuffleGrouping("tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
-				new TopRetweetAlltimeBolt("localhost", 6379, 10), 1)
+				new TopRetweetAlltimeBolt("localhost", 6379, 10), 5)
 				.shuffleGrouping("filter-retweet-bolt");
 
 		Config conf = new Config();
