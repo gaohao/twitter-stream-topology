@@ -3,6 +3,9 @@ package com.mrhooray.spouts;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -29,6 +32,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 	private String consumerSecret = null;
 	private String accessToken = null;
 	private String accessTokenSecret = null;
+	private Logger logger = null;
 
 	public TwitterStreamSpout(String consumerKey, String consumerSecret,
 			String accessToken, String accessTokenSecret) {
@@ -37,6 +41,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 		this.accessToken = accessToken;
 		this.accessTokenSecret = accessTokenSecret;
 		this.queue = new LinkedBlockingQueue<>(this.queueCapacity);
+		this.logger = LogManager.getLogger(TwitterStreamSpout.class.getName());
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -44,10 +49,10 @@ public class TwitterStreamSpout extends BaseRichSpout {
 	public void open(Map conf, TopologyContext context,
 			SpoutOutputCollector collector) {
 		ConfigurationBuilder builder = new ConfigurationBuilder();
-		builder.setOAuthConsumerKey(consumerKey);
-		builder.setOAuthConsumerSecret(consumerSecret);
-		builder.setOAuthAccessToken(accessToken);
-		builder.setOAuthAccessTokenSecret(accessTokenSecret);
+		builder.setOAuthConsumerKey(this.consumerKey);
+		builder.setOAuthConsumerSecret(this.consumerSecret);
+		builder.setOAuthAccessToken(this.accessToken);
+		builder.setOAuthAccessTokenSecret(this.accessTokenSecret);
 		TwitterStreamFactory factory = new TwitterStreamFactory(builder.build());
 		StatusListener listener = new StatusListener() {
 			@Override
@@ -74,10 +79,8 @@ public class TwitterStreamSpout extends BaseRichSpout {
 
 			@Override
 			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-				System.out.println("*********************************");
-				System.out.println("onTrackLimitationNotice: "
+				logger.info("onTrackLimitationNotice: "
 						+ numberOfLimitedStatuses);
-				System.out.println("*********************************");
 			}
 
 		};
