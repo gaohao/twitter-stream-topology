@@ -54,6 +54,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 		builder.setOAuthConsumerSecret(this.consumerSecret);
 		builder.setOAuthAccessToken(this.accessToken);
 		builder.setOAuthAccessTokenSecret(this.accessTokenSecret);
+		builder.setJSONStoreEnabled(true);
 		TwitterStreamFactory factory = new TwitterStreamFactory(builder.build());
 		StatusListener listener = new StatusListener() {
 			@Override
@@ -76,6 +77,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 			@Override
 			public void onStatus(Status status) {
 				queue.offer(status);
+
 			}
 
 			@Override
