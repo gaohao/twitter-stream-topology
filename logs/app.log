@@ -14,3 +14,8 @@
 2012-12-23 17:39:58,207 TRACE c.m.t.TwitterStreamTopology [main]  entry
 2012-12-23 17:41:17,234 TRACE c.m.t.TwitterStreamTopology [main]  entry
 2012-12-23 17:42:20,131 TRACE c.m.t.TwitterStreamTopology [main]  exit
+2012-12-23 17:45:52,078 TRACE c.m.t.TwitterStreamTopology [main]  entry
+2012-12-23 17:46:16,285 TRACE c.m.t.TwitterStreamTopology [main]  entry
+2012-12-23 17:47:18,742 TRACE c.m.t.TwitterStreamTopology [main]  exit
+2012-12-23 18:18:00,375 TRACE c.m.t.TwitterStreamTopology [main]  entry
+2012-12-23 18:19:03,056 TRACE c.m.t.TwitterStreamTopology [main]  exit
