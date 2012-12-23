@@ -60,7 +60,6 @@ public class RedisHelper implements Serializable {
 		JsonObject json = (JsonObject) gson.toJsonTree(status);
 		json.remove("createdAt");
 		json.addProperty("createdAt", getUTC(status.getCreatedAt()));
-		System.out.println(json.toString());
 		tran.set("global:status:" + status.getId(), json.toString());
 	}
 
