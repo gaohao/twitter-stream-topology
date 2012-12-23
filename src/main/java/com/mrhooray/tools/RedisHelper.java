@@ -1,11 +1,12 @@
 package com.mrhooray.tools;
 
 import java.io.Serializable;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -14,8 +15,6 @@ import twitter4j.Status;
 
 public class RedisHelper implements Serializable {
 	private static final long serialVersionUID = 165026396148159099L;
-	private static Logger logger = LogManager.getLogger(RedisHelper.class
-			.getName());;
 
 	public static JedisPool getPool(String host, int port) {
 		return new JedisPool(host, port);
@@ -59,11 +58,22 @@ public class RedisHelper implements Serializable {
 
 	private static void addStatus(Transaction tran, Status status) {
 		Gson gson = new Gson();
-		tran.set("global:status:" + status.getId(), gson.toJson(status));
+		JsonObject json = (JsonObject) gson.toJsonTree(status);
+		json.remove("createdAt");
+		json.addProperty("createdAt", getUTC(status.getCreatedAt()));
+		tran.set("global:status:" + status.getId(), json.toString());
 	}
 
 	private static void removeStatus(Transaction tran, String id) {
 		tran.del("global:status:" + id);
+	}
+
+	private static String getUTC(Date date) {
+		String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ss zzz";
+		SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
+		TimeZone utc = TimeZone.getTimeZone("UTC");
+		sdf.setTimeZone(utc);
+		return sdf.format(date);
 	}
 
 	public static void destroy(JedisPool pool) {

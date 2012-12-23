@@ -25,8 +25,8 @@ public class TwitterStreamTopology {
 
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("tweets-spout", new TwitterStreamSpout(consumerKey,
-				consumerSecret, accessToken, accessTokenSecret));
-		builder.setBolt("filter-retweet-bolt", new FilterRetweetBolt())
+				consumerSecret, accessToken, accessTokenSecret), 1);
+		builder.setBolt("filter-retweet-bolt", new FilterRetweetBolt(), 1)
 				.shuffleGrouping("tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
 				new TopRetweetAlltimeBolt("localhost", 6379, 10), 5)
