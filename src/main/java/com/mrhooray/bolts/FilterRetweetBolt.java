@@ -1,7 +1,5 @@
 package com.mrhooray.bolts;
 
-import java.util.Date;
-
 import twitter4j.Status;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
