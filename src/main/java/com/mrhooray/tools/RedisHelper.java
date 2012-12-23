@@ -37,10 +37,11 @@ public class RedisHelper implements Serializable {
 				redis.clients.jedis.Tuple t = (redis.clients.jedis.Tuple) jedis
 						.zrangeWithScores(key, 0, 0).toArray()[0];
 				double loweast = t.getScore();
+				String loweast_key = (String) jedis.zrange(key, 0, 0).toArray()[0];
 				if (score > loweast) {
 					Transaction tran = jedis.multi();
-					removeStatus(tran, prefix, String.valueOf(status.getId()));
 					tran.zremrangeByRank(key, 0, 0);
+					removeStatus(tran, prefix, loweast_key);
 					tran.zadd(key, (double) score, member);
 					addStatus(tran, prefix, status);
 					tran.exec();
