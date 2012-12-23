@@ -20,7 +20,7 @@ public class FilterRetweetBolt extends BaseBasicBolt {
 		Status status = (Status) input.getValue(0);
 		if (status.isRetweet()) {
 			collector.emit("alltime", new Values(status.getRetweetedStatus()));
-			if (status.getCreatedAt().getTime() - (new Date()).getTime() <= periodTime) {
+			if ((new Date()).getTime() - status.getCreatedAt().getTime() <= periodTime) {
 				collector.emit("periodtime", new Values(status.getRetweetedStatus()));
 			}
 		} else {
