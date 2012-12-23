@@ -9,6 +9,7 @@ import backtype.storm.topology.TopologyBuilder;
 
 import com.mrhooray.bolts.FilterRetweetBolt;
 import com.mrhooray.bolts.TopRetweetAlltimeBolt;
+import com.mrhooray.bolts.TopRetweetPeriodtimeBolt;
 import com.mrhooray.spouts.TwitterStreamSpout;
 
 public class TwitterStreamTopology {
@@ -29,7 +30,10 @@ public class TwitterStreamTopology {
 				.shuffleGrouping("tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
 				new TopRetweetAlltimeBolt("localhost", 6379, 10), 5)
-				.shuffleGrouping("filter-retweet-bolt");
+				.shuffleGrouping("filter-retweet-bolt", "alltime");
+		builder.setBolt("top-retweet-periodtime-bolt",
+				new TopRetweetPeriodtimeBolt("localhost", 6379, 10), 5)
+				.shuffleGrouping("filter-retweet-bolt", "periodtime");
 
 		Config conf = new Config();
 		conf.setDebug(false);

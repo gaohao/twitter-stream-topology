@@ -39,8 +39,9 @@ public class RedisHelper implements Serializable {
 				double loweast = t.getScore();
 				if (score > loweast) {
 					Transaction tran = jedis.multi();
+					removeStatus(tran, (String) tran.zrange(key, 0, 0).get()
+							.toArray()[0]);
 					tran.zremrangeByRank(key, 0, 0);
-					removeStatus(tran, status);
 					tran.zadd(key, (double) score, member);
 					addStatus(tran, status);
 					tran.exec();
@@ -61,8 +62,8 @@ public class RedisHelper implements Serializable {
 		tran.set("global:status:" + status.getId(), gson.toJson(status));
 	}
 
-	private static void removeStatus(Transaction tran, Status status) {
-		tran.del("global:status:" + status.getId());
+	private static void removeStatus(Transaction tran, String id) {
+		tran.del("global:status:" + id);
 	}
 
 	public static void destroy(JedisPool pool) {
