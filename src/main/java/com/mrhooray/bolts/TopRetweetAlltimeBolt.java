@@ -13,7 +13,7 @@ import backtype.storm.tuple.Tuple;
 public class TopRetweetAlltimeBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = -5936036236747710453L;
 	private static JedisPool pool = null;
-	private final String key = "global:topretweet:alltime";
+	private final String prefix = "alltime";
 	private long topCapacity = 0;
 
 	@SuppressWarnings("static-access")
@@ -25,7 +25,7 @@ public class TopRetweetAlltimeBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		RedisHelper.addToTopN(pool, key, topCapacity, status);
+		RedisHelper.addToTopN(pool, prefix, topCapacity, status);
 	}
 
 	@Override
