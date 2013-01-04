@@ -14,7 +14,6 @@ public class TopRetweetPeriodtimeBolt extends BaseBasicBolt {
 
 	private static final long serialVersionUID = 8781711354150063405L;
 	private static JedisPool pool = null;
-	private final String prefix = "periodtime";
 	private long topCapacity = 0;
 
 	@SuppressWarnings("static-access")
@@ -26,7 +25,7 @@ public class TopRetweetPeriodtimeBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		RedisHelper.addToTopN(pool, prefix, topCapacity, status);
+		RedisHelper.addToTopNPeriodtime(pool, topCapacity, status);
 	}
 
 	@Override

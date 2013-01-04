@@ -20,8 +20,9 @@ public class RedisHelper implements Serializable {
 		return new JedisPool(host, port);
 	}
 
-	public static void addToTopN(JedisPool pool, String prefix, long capacity,
+	public static void addToTopNAlltime(JedisPool pool, long capacity,
 			Status status) {
+		String prefix = "alltime";
 		String key = "global:topretweet:" + prefix;
 		String member = String.valueOf(status.getId());
 		double score = (double) status.getRetweetCount();
@@ -29,7 +30,7 @@ public class RedisHelper implements Serializable {
 		jedis.watch(key);
 		if (jedis.zrank(key, member) != null) {
 			Transaction tran = jedis.multi();
-			tran.zadd(key, (double) score, member);
+			tran.zadd(key, score, member);
 			addStatus(tran, prefix, status);
 			tran.exec();
 		} else {
@@ -37,18 +38,64 @@ public class RedisHelper implements Serializable {
 				redis.clients.jedis.Tuple t = (redis.clients.jedis.Tuple) jedis
 						.zrangeWithScores(key, 0, 0).toArray()[0];
 				double loweast = t.getScore();
-				String loweast_key = (String) jedis.zrange(key, 0, 0).toArray()[0];
+				String loweast_member = (String) jedis.zrange(key, 0, 0)
+						.toArray()[0];
 				if (score > loweast) {
 					Transaction tran = jedis.multi();
-					tran.zremrangeByRank(key, 0, 0);
-					removeStatus(tran, prefix, loweast_key);
-					tran.zadd(key, (double) score, member);
+					tran.zrem(key, loweast_member);
+					removeStatus(tran, prefix, loweast_member);
+					tran.zadd(key, score, member);
 					addStatus(tran, prefix, status);
 					tran.exec();
 				}
 			} else {
 				Transaction tran = jedis.multi();
 				tran.zadd(key, (double) score, member);
+				addStatus(tran, prefix, status);
+				tran.exec();
+			}
+		}
+		jedis.unwatch();
+		pool.returnResource(jedis);
+	}
+
+	public static void addToTopNPeriodtime(JedisPool pool, long capacity,
+			Status status) {
+		String prefix = "periodtime";
+		String keyByCount = "global:topretweet:" + prefix + ":count";
+		String keyByTime = "global:topretweet:" + prefix + ":time";
+		String member = String.valueOf(status.getId());
+		double count = (double) status.getRetweetCount();
+		double time = (double) status.getCreatedAt().getTime();
+		Jedis jedis = pool.getResource();
+		jedis.watch(keyByCount);
+		if (jedis.zrank(keyByCount, member) != null) {
+			Transaction tran = jedis.multi();
+			tran.zadd(keyByCount, count, member);
+			tran.zadd(keyByTime, time, member);
+			addStatus(tran, prefix, status);
+			tran.exec();
+		} else {
+			if (jedis.zcount(keyByCount, -1, Double.MAX_VALUE) >= capacity) {
+				redis.clients.jedis.Tuple t = (redis.clients.jedis.Tuple) jedis
+						.zrangeWithScores(keyByCount, 0, 0).toArray()[0];
+				double loweast = t.getScore();
+				String loweast_member = (String) jedis.zrange(keyByCount, 0, 0)
+						.toArray()[0];
+				if (count > loweast) {
+					Transaction tran = jedis.multi();
+					tran.zrem(keyByCount, loweast_member);
+					tran.zrem(keyByTime, loweast_member);
+					removeStatus(tran, prefix, loweast_member);
+					tran.zadd(keyByCount, (double) count, member);
+					tran.zadd(keyByTime, time, member);
+					addStatus(tran, prefix, status);
+					tran.exec();
+				}
+			} else {
+				Transaction tran = jedis.multi();
+				tran.zadd(keyByCount, (double) count, member);
+				tran.zadd(keyByTime, time, member);
 				addStatus(tran, prefix, status);
 				tran.exec();
 			}
