@@ -49,7 +49,7 @@ public class TwitterStreamTopology {
 		cluster.submitTopology("Twitter-Stream-Topology", conf,
 				builder.createTopology());
 		// for development
-		Thread.sleep(1000 * 60 * 1);
+		Thread.sleep(1000 * 60 * 60 * 2);
 		cluster.shutdown();
 	}
 }

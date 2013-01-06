@@ -1,8 +1,9 @@
 package com.mrhooray.bolts;
 
+import org.elasticsearch.client.Client;
+
 import com.mrhooray.tools.ElasticSearchHelper;
 
-import io.searchbox.client.JestClient;
 import twitter4j.Status;
 import backtype.storm.topology.BasicOutputCollector;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -11,7 +12,7 @@ import backtype.storm.tuple.Tuple;
 
 public class IndexTwitterPicBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = 1752377800313397267L;
-	private static JestClient client = null;
+	private static Client client = null;
 
 	public IndexTwitterPicBolt() {
 		client = ElasticSearchHelper.getClient();
@@ -20,7 +21,6 @@ public class IndexTwitterPicBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		System.out.println(status.getMediaEntities()[0].getMediaURL());
 		ElasticSearchHelper.add(client, status);
 	}
 
@@ -30,6 +30,6 @@ public class IndexTwitterPicBolt extends BaseBasicBolt {
 
 	@Override
 	public void cleanup() {
-		ElasticSearchHelper.shutdownClient(client);
+		ElasticSearchHelper.closeClient(client);
 	}
 }
