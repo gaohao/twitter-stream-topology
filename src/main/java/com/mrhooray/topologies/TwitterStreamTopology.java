@@ -33,10 +33,10 @@ public class TwitterStreamTopology {
 		builder.setBolt("filter-tweet-bolt", new FilterTweetBolt(shortPeriod),
 				1).shuffleGrouping("tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
-				new TopRetweetAllTimeBolt(host, port, capacity), 2)
+				new TopRetweetAllTimeBolt(host, port, capacity), 1)
 				.shuffleGrouping("filter-tweet-bolt", "alltime");
 		builder.setBolt("top-retweet-shortperiod-bolt",
-				new TopRetweetShortPeriodBolt(host, port, capacity, "24h"), 2)
+				new TopRetweetShortPeriodBolt(host, port, capacity, "24h"), 1)
 				.shuffleGrouping("filter-tweet-bolt", "24h");
 		builder.setBolt("twitter-pic-index-bolt", new IndexTwitterPicBolt(), 1)
 				.shuffleGrouping("filter-tweet-bolt", "pic");
@@ -49,7 +49,7 @@ public class TwitterStreamTopology {
 		cluster.submitTopology("Twitter-Stream-Topology", conf,
 				builder.createTopology());
 		// for development
-		Thread.sleep(1000 * 60 * 60 * 24);
+		Thread.sleep(1000 * 60 * 1);
 		cluster.shutdown();
 	}
 }

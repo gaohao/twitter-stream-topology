@@ -26,7 +26,7 @@ public class FilterTweetBolt extends BaseBasicBolt {
 				collector.emit("24h", new Values(status.getRetweetedStatus()));
 			}
 		}
-		if (status.getMediaEntities() != null) {
+		if (status.getMediaEntities().length > 0) {
 			collector.emit("pic", new Values(status));
 		}
 	}
