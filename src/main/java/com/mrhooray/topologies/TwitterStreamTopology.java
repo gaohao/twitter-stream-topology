@@ -4,10 +4,11 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 
-import com.mrhooray.bolts.FilterRetweetBolt;
+import com.mrhooray.bolts.FilterTweetBolt;
 import com.mrhooray.bolts.ReapBolt;
 import com.mrhooray.bolts.TopRetweetAllTimeBolt;
 import com.mrhooray.bolts.TopRetweetShortPeriodBolt;
+import com.mrhooray.bolts.IndexTwitterPicBolt;
 import com.mrhooray.spouts.TimerSpout;
 import com.mrhooray.spouts.TwitterStreamSpout;
 
@@ -29,15 +30,16 @@ public class TwitterStreamTopology {
 				consumerSecret, accessToken, accessTokenSecret), 1);
 		builder.setSpout("timer-spout", new TimerSpout(), 1);
 		// bolt
-		builder.setBolt("filter-retweet-bolt",
-				new FilterRetweetBolt(shortPeriod), 1).shuffleGrouping(
-				"tweets-spout");
+		builder.setBolt("filter-tweet-bolt", new FilterTweetBolt(shortPeriod),
+				1).shuffleGrouping("tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
 				new TopRetweetAllTimeBolt(host, port, capacity), 2)
-				.shuffleGrouping("filter-retweet-bolt", "alltime");
+				.shuffleGrouping("filter-tweet-bolt", "alltime");
 		builder.setBolt("top-retweet-shortperiod-bolt",
 				new TopRetweetShortPeriodBolt(host, port, capacity, "24h"), 2)
-				.shuffleGrouping("filter-retweet-bolt", "24h");
+				.shuffleGrouping("filter-tweet-bolt", "24h");
+		builder.setBolt("twitter-pic-index-bolt", new IndexTwitterPicBolt(), 1)
+				.shuffleGrouping("filter-tweet-bolt", "pic");
 		builder.setBolt("reap-bolt", new ReapBolt(host, port, shortPeriod))
 				.shuffleGrouping("timer-spout");
 		// configure and submit
