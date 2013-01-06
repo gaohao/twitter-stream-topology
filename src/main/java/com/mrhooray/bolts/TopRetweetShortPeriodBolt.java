@@ -10,21 +10,25 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Tuple;
 
-public class TopRetweetAllTimeBolt extends BaseBasicBolt {
-	private static final long serialVersionUID = -5936036236747710453L;
+public class TopRetweetShortPeriodBolt extends BaseBasicBolt {
+
+	private static final long serialVersionUID = 8781711354150063405L;
 	private static JedisPool pool = null;
 	private long topCapacity = 0;
+	private String prefix = null;
 
 	@SuppressWarnings("static-access")
-	public TopRetweetAllTimeBolt(String host, int port, long topCapacity) {
+	public TopRetweetShortPeriodBolt(String host, int port, long topCapacity,
+			String prefix) {
 		this.pool = RedisHelper.getPool(host, port);
 		this.topCapacity = topCapacity;
+		this.prefix = prefix;
 	}
 
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		RedisHelper.addToTopNAlltime(pool, topCapacity, status);
+		RedisHelper.addToTopNShortPeriod(pool, topCapacity, status, prefix);
 	}
 
 	@Override

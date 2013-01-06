@@ -11,17 +11,17 @@ import backtype.storm.tuple.Tuple;
 public class ReapBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = 6069215708986553477L;
 	private static JedisPool pool = null;
-	private long periodTime = 0;
+	private long shortPeriod = 0;
 
 	@SuppressWarnings("static-access")
-	public ReapBolt(String host, int port, long periodTime) {
+	public ReapBolt(String host, int port, long shortPeriod) {
 		this.pool = RedisHelper.getPool(host, port);
-		this.periodTime = periodTime;
+		this.shortPeriod = shortPeriod;
 	}
 
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
-		RedisHelper.reap(pool, periodTime);
+		RedisHelper.reap(pool, shortPeriod);
 	}
 
 	@Override

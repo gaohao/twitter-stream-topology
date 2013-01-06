@@ -24,7 +24,7 @@ public class TimerSpout extends BaseRichSpout {
 
 	@Override
 	public void nextTuple() {
-		this.collector.emit(new Values("reap"));
+		this.collector.emit(new Values("Yay!reap"));
 		Utils.sleep(1000 * 10);
 	}
 

@@ -10,10 +10,10 @@ import backtype.storm.tuple.Values;
 
 public class FilterRetweetBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = 6069215708986553477L;
-	private long periodTime = 0;
+	private long shortPeriod = 0;
 
 	public FilterRetweetBolt(long periodTime) {
-		this.periodTime = periodTime;
+		this.shortPeriod = periodTime;
 	}
 
 	@Override
@@ -22,9 +22,8 @@ public class FilterRetweetBolt extends BaseBasicBolt {
 		if (status.isRetweet()) {
 			collector.emit("alltime", new Values(status.getRetweetedStatus()));
 			if (System.currentTimeMillis()
-					- status.getRetweetedStatus().getCreatedAt().getTime() <= periodTime) {
-				collector.emit("periodtime",
-						new Values(status.getRetweetedStatus()));
+					- status.getRetweetedStatus().getCreatedAt().getTime() <= shortPeriod) {
+				collector.emit("24h", new Values(status.getRetweetedStatus()));
 			}
 		} else {
 			return;
@@ -35,7 +34,6 @@ public class FilterRetweetBolt extends BaseBasicBolt {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declareStream("alltime",
 				new Fields("retweeted-status-alltime"));
-		declarer.declareStream("periodtime", new Fields(
-				"retweeted-status-periodtime"));
+		declarer.declareStream("24h", new Fields("retweeted-status-24h"));
 	}
 }

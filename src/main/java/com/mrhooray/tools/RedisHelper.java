@@ -60,9 +60,8 @@ public class RedisHelper implements Serializable {
 		pool.returnResource(jedis);
 	}
 
-	public static void addToTopNPeriodtime(JedisPool pool, long capacity,
-			Status status) {
-		String prefix = "24h";
+	public static void addToTopNShortPeriod(JedisPool pool, long capacity,
+			Status status, String prefix) {
 		String keyByCount = "topretweet:" + prefix + ":count";
 		String keyByTime = "topretweet:" + prefix + ":time";
 		String member = String.valueOf(status.getId());
@@ -105,14 +104,14 @@ public class RedisHelper implements Serializable {
 		pool.returnResource(jedis);
 	}
 
-	public static void reap(JedisPool pool, long periodTime) {
+	public static void reap(JedisPool pool, long shortPeriod) {
 		String prefix = "24h";
 		String keyByCount = "topretweet:" + prefix + ":count";
 		String keyByTime = "topretweet:" + prefix + ":time";
 		Jedis jedis = pool.getResource();
 		jedis.watch(keyByCount, keyByTime);
 		Set<String> past = jedis.zrangeByScore(keyByTime, 0,
-				System.currentTimeMillis() - periodTime);
+				System.currentTimeMillis() - shortPeriod);
 		for (String str : past) {
 			Transaction tran = jedis.multi();
 			tran.zrem(keyByTime, str);
