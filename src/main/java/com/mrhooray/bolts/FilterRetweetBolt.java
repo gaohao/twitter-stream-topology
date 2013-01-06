@@ -9,10 +9,12 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
 public class FilterRetweetBolt extends BaseBasicBolt {
-
 	private static final long serialVersionUID = 6069215708986553477L;
+	private long periodTime = 0;
 
-	private static final long periodTime = 86400000; /* 24 hours */
+	public FilterRetweetBolt(long periodTime) {
+		this.periodTime = periodTime;
+	}
 
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {

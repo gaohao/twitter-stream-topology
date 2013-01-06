@@ -24,22 +24,26 @@ public class TwitterStreamTopology {
 		String consumerSecret = "x5StK9aqX8LfFAUIKrAOeRVFb0autLF6rquNOVRLk";
 		String accessToken = "280466939-GH7xhmrK4CG89cJ8SeQtBTcOs0BNRzOACRL4DX5C";
 		String accessTokenSecret = "0k2Dfd8vJwjmAIkE34GeixnCrqIVoxoSg6DkHPpE";
+		String host = "localhost";
+		int port = 6379;
+		long periodTime = 86400000;
 
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("tweets-spout", new TwitterStreamSpout(consumerKey,
 				consumerSecret, accessToken, accessTokenSecret), 1);
 		builder.setSpout("timer-spout", new TimerSpout(), 1);
 
-		builder.setBolt("filter-retweet-bolt", new FilterRetweetBolt(), 1)
-				.shuffleGrouping("tweets-spout");
+		builder.setBolt("filter-retweet-bolt",
+				new FilterRetweetBolt(periodTime), 1).shuffleGrouping(
+				"tweets-spout");
 		builder.setBolt("top-retweet-alltime-bolt",
-				new TopRetweetAlltimeBolt("localhost", 6379, 10), 5)
-				.shuffleGrouping("filter-retweet-bolt", "alltime");
+				new TopRetweetAlltimeBolt(host, port, 10), 5).shuffleGrouping(
+				"filter-retweet-bolt", "alltime");
 		builder.setBolt("top-retweet-periodtime-bolt",
-				new TopRetweetPeriodtimeBolt("localhost", 6379, 10), 5)
+				new TopRetweetPeriodtimeBolt(host, port, 10), 5)
 				.shuffleGrouping("filter-retweet-bolt", "periodtime");
-		builder.setBolt("reap-bolt", new ReapBolt()).shuffleGrouping(
-				"timer-spout");
+		builder.setBolt("reap-bolt", new ReapBolt(host, port, periodTime))
+				.shuffleGrouping("timer-spout");
 
 		Config conf = new Config();
 		conf.setDebug(false);

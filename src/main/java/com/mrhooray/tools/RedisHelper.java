@@ -3,6 +3,7 @@ package com.mrhooray.tools;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Set;
 import java.util.TimeZone;
 
 import com.google.gson.Gson;
@@ -23,7 +24,7 @@ public class RedisHelper implements Serializable {
 	public static void addToTopNAlltime(JedisPool pool, long capacity,
 			Status status) {
 		String prefix = "alltime";
-		String key = "global:topretweet:" + prefix;
+		String key = "topretweet:" + prefix + ":count";
 		String member = String.valueOf(status.getId());
 		double score = (double) status.getRetweetCount();
 		Jedis jedis = pool.getResource();
@@ -61,14 +62,14 @@ public class RedisHelper implements Serializable {
 
 	public static void addToTopNPeriodtime(JedisPool pool, long capacity,
 			Status status) {
-		String prefix = "periodtime";
-		String keyByCount = "global:topretweet:" + prefix + ":count";
-		String keyByTime = "global:topretweet:" + prefix + ":time";
+		String prefix = "24h";
+		String keyByCount = "topretweet:" + prefix + ":count";
+		String keyByTime = "topretweet:" + prefix + ":time";
 		String member = String.valueOf(status.getId());
 		double count = (double) status.getRetweetCount();
 		double time = (double) status.getCreatedAt().getTime();
 		Jedis jedis = pool.getResource();
-		jedis.watch(keyByCount);
+		jedis.watch(keyByCount, keyByTime);
 		if (jedis.zrank(keyByCount, member) != null) {
 			Transaction tran = jedis.multi();
 			tran.zadd(keyByCount, count, member);
@@ -104,17 +105,35 @@ public class RedisHelper implements Serializable {
 		pool.returnResource(jedis);
 	}
 
+	public static void reap(JedisPool pool, long periodTime) {
+		String prefix = "24h";
+		String keyByCount = "topretweet:" + prefix + ":count";
+		String keyByTime = "topretweet:" + prefix + ":time";
+		Jedis jedis = pool.getResource();
+		jedis.watch(keyByCount, keyByTime);
+		Set<String> past = jedis.zrangeByScore(keyByTime, 0,
+				System.currentTimeMillis() - periodTime);
+		for (String str : past) {
+			Transaction tran = jedis.multi();
+			tran.zrem(keyByTime, str);
+			tran.zrem(keyByCount, str);
+			removeStatus(tran, prefix, str);
+			tran.exec();
+		}
+		jedis.unwatch();
+		pool.returnResource(jedis);
+	}
+
 	private static void addStatus(Transaction tran, String prefix, Status status) {
 		Gson gson = new Gson();
 		JsonObject json = (JsonObject) gson.toJsonTree(status);
 		json.remove("createdAt");
 		json.addProperty("createdAt", getUTC(status.getCreatedAt()));
-		tran.set("global:status:" + prefix + ":" + status.getId(),
-				json.toString());
+		tran.set("tweet:" + prefix + ":" + status.getId(), json.toString());
 	}
 
 	private static void removeStatus(Transaction tran, String prefix, String id) {
-		tran.del("global:status:" + prefix + ":" + id);
+		tran.del("tweet:" + prefix + ":" + id);
 	}
 
 	private static String getUTC(Date date) {

@@ -11,23 +11,21 @@ import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 
 public class TimerSpout extends BaseRichSpout {
-
 	private static final long serialVersionUID = -2025234393487204829L;
-
 	private SpoutOutputCollector collector = null;
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void open(Map conf, TopologyContext context,
 			SpoutOutputCollector collector) {
 		this.collector = collector;
-		
+
 	}
 
 	@Override
 	public void nextTuple() {
-		this.collector.emit(new Values(1));
-		Utils.sleep(1000);
+		this.collector.emit(new Values("reap"));
+		Utils.sleep(1000 * 10);
 	}
 
 	@Override
