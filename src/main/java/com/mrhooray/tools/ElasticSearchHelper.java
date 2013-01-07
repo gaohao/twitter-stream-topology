@@ -42,7 +42,7 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 					.field("store", "yes").field("index", "analyzed")
 					.endObject().startObject("json").field("type", "string")
 					.field("store", "yes").field("index", "not_analyzed")
-					.endObject().startObject("createdAt").field("type", "long")
+					.endObject().startObject("time").field("type", "long")
 					.field("store", "yes").field("index", "not_analyzed")
 					.endObject().endObject().endObject().endObject();
 		} catch (IOException e) {
@@ -59,8 +59,7 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 			XContentBuilder doc = XContentFactory.jsonBuilder().startObject()
 					.field("text", status.getText())
 					.field("json", toJson(status))
-					.field("time", status.getCreatedAt().getTime())
-					.endObject();
+					.field("time", status.getCreatedAt().getTime()).endObject();
 			client.prepareIndex("twitter", "tweet").setSource(doc).execute()
 					.actionGet();
 		} catch (IOException e) {
