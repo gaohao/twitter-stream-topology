@@ -2,9 +2,6 @@ package com.mrhooray.tools;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
@@ -19,12 +16,9 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import twitter4j.Status;
 
-public class ElasticSearchHelper implements Serializable {
+public class ElasticSearchHelper extends BaseHelper implements Serializable {
 	private static final long serialVersionUID = 7332198408133535456L;
 
 	public static Client getClient() {
@@ -65,7 +59,7 @@ public class ElasticSearchHelper implements Serializable {
 			XContentBuilder doc = XContentFactory.jsonBuilder().startObject()
 					.field("text", status.getText())
 					.field("json", toJson(status))
-					.field("createdAt", status.getCreatedAt().getTime())
+					.field("time", status.getCreatedAt().getTime())
 					.endObject();
 			client.prepareIndex("twitter", "tweet").setSource(doc).execute()
 					.actionGet();
@@ -74,20 +68,8 @@ public class ElasticSearchHelper implements Serializable {
 		}
 	}
 
-	private static String toJson(Status status) {
-		Gson gson = new Gson();
-		JsonObject json = (JsonObject) gson.toJsonTree(status);
-		json.remove("createdAt");
-		json.addProperty("createdAt", getUTC(status.getCreatedAt()));
-		return json.toString();
-	}
+	public static void reap() {
 
-	private static String getUTC(Date date) {
-		String ISO_FORMAT = "yyyy-MM-dd'T'HH:mm:ss zzz";
-		SimpleDateFormat sdf = new SimpleDateFormat(ISO_FORMAT);
-		TimeZone utc = TimeZone.getTimeZone("UTC");
-		sdf.setTimeZone(utc);
-		return sdf.format(date);
 	}
 
 	public static void closeClient(Client client) {
