@@ -21,7 +21,7 @@ public class IndexTwitterPicBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		ElasticSearchHelper.add(client, status);
+		ElasticSearchHelper.index(client, status);
 	}
 
 	@Override
