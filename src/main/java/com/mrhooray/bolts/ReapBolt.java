@@ -26,7 +26,7 @@ public class ReapBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		RedisHelper.reap(pool, shortPeriod);
-		ElasticSearchHelper.reap(client, 1000 * 60);
+		ElasticSearchHelper.reap(client, 1000 * 60 * 60 * 24);
 	}
 
 	@Override
