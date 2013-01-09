@@ -3,9 +3,6 @@ package com.mrhooray.spouts;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -24,7 +21,6 @@ import backtype.storm.utils.Utils;
 
 public class TwitterStreamSpout extends BaseRichSpout {
 	private static final long serialVersionUID = 5173509952980902144L;
-	private static Logger logger = null;
 	private LinkedBlockingQueue<Status> queue = null;
 	private final int queueCapacity = 1024;
 	private SpoutOutputCollector collector = null;
@@ -34,7 +30,6 @@ public class TwitterStreamSpout extends BaseRichSpout {
 	private String accessToken = null;
 	private String accessTokenSecret = null;
 
-	@SuppressWarnings("static-access")
 	public TwitterStreamSpout(String consumerKey, String consumerSecret,
 			String accessToken, String accessTokenSecret) {
 		this.consumerKey = consumerKey;
@@ -42,7 +37,6 @@ public class TwitterStreamSpout extends BaseRichSpout {
 		this.accessToken = accessToken;
 		this.accessTokenSecret = accessTokenSecret;
 		this.queue = new LinkedBlockingQueue<>(this.queueCapacity);
-		this.logger = LogManager.getLogger(TwitterStreamSpout.class.getName());
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -82,8 +76,6 @@ public class TwitterStreamSpout extends BaseRichSpout {
 
 			@Override
 			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
-				logger.info("onTrackLimitationNotice: "
-						+ numberOfLimitedStatuses);
 			}
 
 		};
