@@ -15,18 +15,21 @@ public class ReapBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = 6069215708986553477L;
 	private static JedisPool pool = null;
 	private static Client client = null;
-	private long shortPeriod = 0;
+	private long h_24 = 86400000;
+	private long h_1 = 3600000;
+	private long m_1 = 60000;
 
-	public ReapBolt(String host, int port, long shortPeriod) {
-		this.shortPeriod = shortPeriod;
+	public ReapBolt(String host, int port) {
 		pool = RedisHelper.getPool(host, port);
 		client = ElasticSearchHelper.getClient();
 	}
 
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
-		RedisHelper.reap(pool, shortPeriod);
-		ElasticSearchHelper.reap(client, 1000 * 60 * 60 * 24);
+		RedisHelper.reap(pool, h_24, "24h");
+		RedisHelper.reap(pool, h_1, "1h");
+		RedisHelper.reap(pool, m_1, "1m");
+		ElasticSearchHelper.reap(client, h_24 * 5);
 	}
 
 	@Override

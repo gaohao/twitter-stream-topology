@@ -98,8 +98,7 @@ public class RedisHelper extends BaseHelper implements Serializable {
 		pool.returnResource(jedis);
 	}
 
-	public static void reap(JedisPool pool, long shortPeriod) {
-		String prefix = "24h";
+	public static void reap(JedisPool pool, long shortPeriod, String prefix) {
 		String keyByCount = "topretweet:" + prefix + ":count";
 		String keyByTime = "topretweet:" + prefix + ":time";
 		Jedis jedis = pool.getResource();
