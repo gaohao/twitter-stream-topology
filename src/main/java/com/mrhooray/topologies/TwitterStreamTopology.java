@@ -15,18 +15,24 @@ import com.mrhooray.spouts.TwitterStreamSpout;
 public class TwitterStreamTopology {
 
 	public static void main(String[] args) throws InterruptedException {
-		// Default Level
-		String consumerKey = "KRUyRf2ILVsNiAQhGVkROw";
-		String consumerSecret = "y0H4D6p5bsvcZWti0MMsJywRn5HYnXXYvGs1dlQ15A";
-		String accessToken = "1068889405-a3CPN1s6HJK4nxgeIXfcDIPU5sVBbft3nr9Xvo";
-		String accessTokenSecret = "989IWliREBgkJVRglL0lZXDNpPf7tcI7PihY7sY";
-		// Garden Hose
-		// String consumerKey = "ZbVRenq6eWoajY6XUZjrrQ";
-		// String consumerSecret = "x5StK9aqX8LfFAUIKrAOeRVFb0autLF6rquNOVRLk";
-		// String accessToken =
-		// "280466939-GH7xhmrK4CG89cJ8SeQtBTcOs0BNRzOACRL4DX5C";
-		// String accessTokenSecret =
-		// "0k2Dfd8vJwjmAIkE34GeixnCrqIVoxoSg6DkHPpE";
+		String consumerKey = null;
+		String consumerSecret = null;
+		String accessToken = null;
+		String accessTokenSecret = null;
+		if (args.length == 1 && args[0].equals("gardenhose")) {
+			// Garden Hose Access Level
+			consumerKey = "ZbVRenq6eWoajY6XUZjrrQ";
+			consumerSecret = "x5StK9aqX8LfFAUIKrAOeRVFb0autLF6rquNOVRLk";
+			accessToken = "280466939-GH7xhmrK4CG89cJ8SeQtBTcOs0BNRzOACRL4DX5C";
+			accessTokenSecret = "0k2Dfd8vJwjmAIkE34GeixnCrqIVoxoSg6DkHPpE";
+		} else {
+			// Default Access Level
+			consumerKey = "KRUyRf2ILVsNiAQhGVkROw";
+			consumerSecret = "y0H4D6p5bsvcZWti0MMsJywRn5HYnXXYvGs1dlQ15A";
+			accessToken = "1068889405-a3CPN1s6HJK4nxgeIXfcDIPU5sVBbft3nr9Xvo";
+			accessTokenSecret = "989IWliREBgkJVRglL0lZXDNpPf7tcI7PihY7sY";
+		}
+
 		String host = "localhost";
 		int port = 6379;
 		int capacity = 100;
