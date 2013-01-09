@@ -20,7 +20,8 @@ public class FilterTweetBolt extends BaseBasicBolt {
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
 		Status status = (Status) input.getValue(0);
-		if (status.isRetweet()) {
+		if (status.isRetweet()
+				&& status.getRetweetedStatus().getRetweetCount() > 0) {
 			collector.emit("alltime", new Values(status.getRetweetedStatus()));
 			if (System.currentTimeMillis()
 					- status.getRetweetedStatus().getCreatedAt().getTime() <= h_24) {
