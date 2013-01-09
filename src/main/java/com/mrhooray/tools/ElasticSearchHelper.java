@@ -41,14 +41,16 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 		XContentBuilder mapping = null;
 		try {
 			mapping = XContentFactory.jsonBuilder().startObject()
-					.startObject(type).startObject("properties")
-					.startObject("text").field("type", "string")
-					.field("store", "yes").field("index", "analyzed")
-					.endObject().startObject("json").field("type", "string")
-					.field("store", "yes").field("index", "not_analyzed")
-					.endObject().startObject("time").field("type", "long")
-					.field("store", "yes").field("index", "not_analyzed")
-					.endObject().endObject().endObject().endObject();
+					.startObject(type).startObject("_source")
+					.field("compress", true).endObject()
+					.startObject("properties").startObject("text")
+					.field("type", "string").field("store", "yes")
+					.field("index", "analyzed").endObject().startObject("json")
+					.field("type", "string").field("store", "yes")
+					.field("index", "no").endObject().startObject("time")
+					.field("type", "long").field("store", "yes")
+					.field("index", "not_analyzed").endObject().endObject()
+					.endObject().endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
