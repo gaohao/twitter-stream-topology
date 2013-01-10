@@ -54,8 +54,10 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 					.field("type", "string").field("store", "yes")
 					.field("index", "no").endObject().startObject("time")
 					.field("type", "long").field("store", "yes")
-					.field("index", "not_analyzed").endObject().endObject()
-					.endObject().endObject();
+					.field("index", "not_analyzed").endObject()
+					.startObject("picurl").field("type", "string")
+					.field("store", "yes").field("index", "not_analyzed")
+					.endObject().endObject().endObject().endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -66,15 +68,34 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 	}
 
 	public static void index(Client client, Status status) {
-		try {
-			XContentBuilder doc = XContentFactory.jsonBuilder().startObject()
-					.field("text", status.getText())
-					.field("json", toJson(status))
-					.field("time", status.getCreatedAt().getTime()).endObject();
-			client.prepareIndex(index, type).setSource(doc).execute()
-					.actionGet();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (!isIndexed(client, status.getMediaEntities()[0].getMediaURL())) {
+			try {
+				XContentBuilder doc = XContentFactory
+						.jsonBuilder()
+						.startObject()
+						.field("text", status.getText())
+						.field("json", toJson(status))
+						.field("time", status.getCreatedAt().getTime())
+						.field("picurl",
+								status.getMediaEntities()[0].getMediaURL())
+						.endObject();
+				client.prepareIndex(index, type).setSource(doc).execute()
+						.actionGet();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static boolean isIndexed(Client client, String url) {
+		QueryBuilder query = QueryBuilders.termQuery("picurl", url);
+		SearchHits hits = client.prepareSearch(index).setQuery(query)
+				.addSort("time", SortOrder.ASC).setSize(10).setExplain(true)
+				.execute().actionGet().getHits();
+		if (hits.totalHits() > 0) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -86,7 +107,7 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 		if (sizeInGB > sizeLimitInGB) {
 			QueryBuilder query = QueryBuilders.matchAllQuery();
 			SearchHits hits = client.prepareSearch(index).setQuery(query)
-					.addSort("time", SortOrder.ASC).setSize(5000)
+					.addSort("time", SortOrder.ASC).setSize(10000)
 					.setExplain(true).execute().actionGet().getHits();
 			BulkRequestBuilder bulkRequest = client.prepareBulk();
 			for (SearchHit hit : hits) {
