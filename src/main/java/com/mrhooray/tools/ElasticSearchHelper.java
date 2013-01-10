@@ -87,6 +87,11 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 		}
 	}
 
+	public static void delete(Client client, long deletedStatusID) {
+		client.prepareDelete(index, type, String.valueOf(deletedStatusID))
+				.setRefresh(true).execute().actionGet();
+	}
+
 	private static boolean isIndexed(Client client, String url) {
 		QueryBuilder query = QueryBuilders.termQuery("picurl", url);
 		SearchHits hits = client.prepareSearch(index).setQuery(query)

@@ -21,7 +21,8 @@ import backtype.storm.utils.Utils;
 
 public class TwitterStreamSpout extends BaseRichSpout {
 	private static final long serialVersionUID = 5173509952980902144L;
-	private LinkedBlockingQueue<Status> queue = null;
+	private LinkedBlockingQueue<Status> queueOnStatus = null;
+	private LinkedBlockingQueue<Long> queueOnDelete = null;
 	private final int queueCapacity = 1024;
 	private SpoutOutputCollector collector = null;
 	private TwitterStream twitterStream = null;
@@ -36,7 +37,8 @@ public class TwitterStreamSpout extends BaseRichSpout {
 		this.consumerSecret = consumerSecret;
 		this.accessToken = accessToken;
 		this.accessTokenSecret = accessTokenSecret;
-		this.queue = new LinkedBlockingQueue<>(this.queueCapacity);
+		this.queueOnStatus = new LinkedBlockingQueue<>(this.queueCapacity);
+		this.queueOnDelete = new LinkedBlockingQueue<>(this.queueCapacity);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -58,6 +60,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 			@Override
 			public void onDeletionNotice(
 					StatusDeletionNotice statusDeletionNotice) {
+				queueOnDelete.offer(statusDeletionNotice.getStatusId());
 			}
 
 			@Override
@@ -70,7 +73,7 @@ public class TwitterStreamSpout extends BaseRichSpout {
 
 			@Override
 			public void onStatus(Status status) {
-				queue.offer(status);
+				queueOnStatus.offer(status);
 
 			}
 
@@ -87,17 +90,25 @@ public class TwitterStreamSpout extends BaseRichSpout {
 
 	@Override
 	public void nextTuple() {
-		Status status = queue.poll();
-		if (status == null) {
+		Status status = queueOnStatus.poll();
+		Long deletedStatusID = queueOnDelete.poll();
+		if (status == null && deletedStatusID == null) {
 			Utils.sleep(20);
 		} else {
-			this.collector.emit(new Values(status));
+			if (status != null) {
+				this.collector.emit("onstatus", new Values(status));
+			}
+			if (deletedStatusID != null) {
+				this.collector.emit("ondelete", new Values(deletedStatusID));
+			}
+
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("status"));
+		declarer.declareStream("onstatus", new Fields("status"));
+		declarer.declareStream("ondelete", new Fields("deletedStatusID"));
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.topology.TopologyBuilder;
 
+import com.mrhooray.bolts.DeleteTwitterPicBolt;
 import com.mrhooray.bolts.FilterTweetBolt;
 import com.mrhooray.bolts.ReapBolt;
 import com.mrhooray.bolts.TopRetweetAllTimeBolt;
@@ -44,7 +45,9 @@ public class TwitterStreamTopology {
 		builder.setSpout("timer-spout", new TimerSpout(), 1);
 		// bolt
 		builder.setBolt("filter-tweet-bolt", new FilterTweetBolt(), 1)
-				.shuffleGrouping("tweets-spout");
+				.shuffleGrouping("tweets-spout", "onstatus");
+		builder.setBolt("delete-twitter-pic-bolt", new DeleteTwitterPicBolt(),
+				1).shuffleGrouping("tweets-spout", "ondelete");
 		builder.setBolt("top-retweet-alltime-bolt",
 				new TopRetweetAllTimeBolt(host, port, capacity), 2)
 				.shuffleGrouping("filter-tweet-bolt", "alltime");
@@ -57,7 +60,7 @@ public class TwitterStreamTopology {
 		builder.setBolt("top-retweet-shortperiod-bolt-1m",
 				new TopRetweetShortPeriodBolt(host, port, capacity, "1m"), 2)
 				.shuffleGrouping("filter-tweet-bolt", "1m");
-		builder.setBolt("twitter-pic-index-bolt", new IndexTwitterPicBolt(), 1)
+		builder.setBolt("index-twitter-pic-bolt", new IndexTwitterPicBolt(), 1)
 				.shuffleGrouping("filter-tweet-bolt", "pic");
 		builder.setBolt("reap-bolt", new ReapBolt(host, port), 1)
 				.shuffleGrouping("timer-spout");
