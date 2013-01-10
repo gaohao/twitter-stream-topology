@@ -50,12 +50,12 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 					.field("compress", true).endObject()
 					.startObject("properties").startObject("text")
 					.field("type", "string").field("store", "yes")
-					.field("index", "analyzed").endObject().startObject("json")
-					.field("type", "string").field("store", "yes")
-					.field("index", "no").endObject().startObject("time")
-					.field("type", "long").field("store", "yes")
-					.field("index", "not_analyzed").endObject()
-					.startObject("picurl").field("type", "string")
+					.field("index", "analyzed").field("analyzer", "snowball")
+					.endObject().startObject("json").field("type", "string")
+					.field("store", "yes").field("index", "no").endObject()
+					.startObject("time").field("type", "long")
+					.field("store", "yes").field("index", "not_analyzed")
+					.endObject().startObject("picurl").field("type", "string")
 					.field("store", "yes").field("index", "not_analyzed")
 					.endObject().endObject().endObject().endObject();
 		} catch (IOException e) {
