@@ -29,7 +29,7 @@ public class ReapBolt extends BaseBasicBolt {
 		RedisHelper.reap(pool, h_24, "24h");
 		RedisHelper.reap(pool, h_1, "1h");
 		RedisHelper.reap(pool, m_1, "1m");
-		ElasticSearchHelper.reap(client, h_24 * 1);
+		ElasticSearchHelper.reap(client, 5);
 	}
 
 	@Override

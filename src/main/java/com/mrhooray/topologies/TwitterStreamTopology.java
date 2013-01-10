@@ -59,8 +59,8 @@ public class TwitterStreamTopology {
 				.shuffleGrouping("filter-tweet-bolt", "1m");
 		builder.setBolt("twitter-pic-index-bolt", new IndexTwitterPicBolt(), 1)
 				.shuffleGrouping("filter-tweet-bolt", "pic");
-		builder.setBolt("reap-bolt", new ReapBolt(host, port)).shuffleGrouping(
-				"timer-spout");
+		builder.setBolt("reap-bolt", new ReapBolt(host, port), 1)
+				.shuffleGrouping("timer-spout");
 		// configure and submit
 		Config conf = new Config();
 		conf.setDebug(false);

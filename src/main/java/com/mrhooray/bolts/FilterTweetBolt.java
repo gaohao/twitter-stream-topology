@@ -40,7 +40,14 @@ public class FilterTweetBolt extends BaseBasicBolt {
 			}
 		}
 		if (status.getMediaEntities().length > 0) {
-			collector.emit("pic", new Values(status));
+			if (status.isRetweet()) {
+				if (status.getRetweetedStatus().getMediaEntities().length > 0) {
+					collector.emit("pic",
+							new Values(status.getRetweetedStatus()));
+				}
+			} else {
+				collector.emit("pic", new Values(status));
+			}
 		}
 	}
 

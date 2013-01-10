@@ -2,11 +2,14 @@ package com.mrhooray.tools;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Date;
 
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.stats.IndicesStats;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.transport.TransportClient;
@@ -15,9 +18,11 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortOrder;
 
 import twitter4j.Status;
 
@@ -73,13 +78,25 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 		}
 	}
 
-	public static void reap(Client client, long ahead) {
-		QueryBuilder query = QueryBuilders.filteredQuery(
-				QueryBuilders.matchAllQuery(),
-				FilterBuilders.rangeFilter("time").lt(
-						System.currentTimeMillis() - ahead));
-		client.prepareDeleteByQuery(index).setQuery(query).execute()
-				.actionGet();
+	public static void reap(Client client, int sizeLimitInGB) {
+		IndicesStats stats = client.admin().indices().prepareStats()
+				.setIndices(index).execute().actionGet();
+		double sizeInGB = stats.index(index).getTotal().getStore().getSize()
+				.getGbFrac();
+		if (sizeInGB > sizeLimitInGB) {
+			QueryBuilder query = QueryBuilders.matchAllQuery();
+			SearchHits hits = client.prepareSearch(index).setQuery(query)
+					.addSort("time", SortOrder.ASC).setSize(5000)
+					.setExplain(true).execute().actionGet().getHits();
+			BulkRequestBuilder bulkRequest = client.prepareBulk();
+			for (SearchHit hit : hits) {
+				System.out
+						.println(new Date((long) hit.getSource().get("time")));
+				bulkRequest.add(client.prepareDelete(index, type, hit.getId())
+						.setRefresh(true));
+			}
+			bulkRequest.execute().actionGet();
+		}
 	}
 
 	public static void closeClient(Client client) {
