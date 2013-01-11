@@ -28,12 +28,12 @@ import twitter4j.Status;
 
 public class ElasticSearchHelper extends BaseHelper implements Serializable {
 	private static final long serialVersionUID = 7332198408133535456L;
-	private static final String index = "twitter";
+	private static final String index = "tweets";
 	private static final String type = "tweet";
 
 	public static Client getClient() {
 		Settings settings = ImmutableSettings.settingsBuilder()
-				.put("cluster.name", "twitter-pic-search").build();
+				.put("cluster.name", "s1.mrhooray.com").build();
 		Client client = new TransportClient(settings)
 				.addTransportAddress(new InetSocketTransportAddress(
 						"localhost", 9300));
