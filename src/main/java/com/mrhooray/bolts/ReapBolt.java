@@ -19,9 +19,9 @@ public class ReapBolt extends BaseBasicBolt {
 	private long h_1 = 3600000;
 	private long m_1 = 60000;
 
-	public ReapBolt(String host, int port) {
-		pool = RedisHelper.getPool(host, port);
-		client = ElasticSearchHelper.getClient();
+	public ReapBolt(String hostR, int portR, String hostES, int portES) {
+		pool = RedisHelper.getPool(hostR, portR);
+		client = ElasticSearchHelper.getClient(hostES, portES);
 	}
 
 	@Override

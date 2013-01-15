@@ -13,8 +13,8 @@ public class DeleteTwitterPicBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = -8031426307137555777L;
 	private static Client client = null;
 
-	public DeleteTwitterPicBolt() {
-		client = ElasticSearchHelper.getClient();
+	public DeleteTwitterPicBolt(String host, int port) {
+		client = ElasticSearchHelper.getClient(host, port);
 	}
 
 	@Override

@@ -31,12 +31,11 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 	private static final String index = "tweets";
 	private static final String type = "tweet";
 
-	public static Client getClient() {
+	public static Client getClient(String host, int port) {
 		Settings settings = ImmutableSettings.settingsBuilder()
 				.put("cluster.name", "s1.mrhooray.com").build();
 		Client client = new TransportClient(settings)
-				.addTransportAddress(new InetSocketTransportAddress(
-						"localhost", 9300));
+				.addTransportAddress(new InetSocketTransportAddress(host, port));
 		IndicesExistsRequest ier = new IndicesExistsRequest(index);
 		ActionFuture<IndicesExistsResponse> response = client.admin().indices()
 				.exists(ier);

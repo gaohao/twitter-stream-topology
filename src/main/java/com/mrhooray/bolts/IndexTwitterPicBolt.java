@@ -14,8 +14,8 @@ public class IndexTwitterPicBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = 1752377800313397267L;
 	private static Client client = null;
 
-	public IndexTwitterPicBolt() {
-		client = ElasticSearchHelper.getClient();
+	public IndexTwitterPicBolt(String host, int port) {
+		client = ElasticSearchHelper.getClient(host, port);
 	}
 
 	@Override

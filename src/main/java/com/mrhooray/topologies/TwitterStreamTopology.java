@@ -34,8 +34,10 @@ public class TwitterStreamTopology {
 			accessTokenSecret = "989IWliREBgkJVRglL0lZXDNpPf7tcI7PihY7sY";
 		}
 
-		String host = "localhost";
-		int port = 6379;
+		String hostR = "localhost";
+		String hostES = "localhost";
+		int portR = 16379;
+		int portES = 19300;
 		int capacity = 100;
 
 		TopologyBuilder builder = new TopologyBuilder();
@@ -46,24 +48,27 @@ public class TwitterStreamTopology {
 		// bolt
 		builder.setBolt("filter-tweet-bolt", new FilterTweetBolt(), 1)
 				.shuffleGrouping("tweets-spout", "onstatus");
-		builder.setBolt("delete-twitter-pic-bolt", new DeleteTwitterPicBolt(),
-				1).shuffleGrouping("tweets-spout", "ondelete");
+		builder.setBolt("delete-twitter-pic-bolt",
+				new DeleteTwitterPicBolt(hostES, portES), 1).shuffleGrouping(
+				"tweets-spout", "ondelete");
 		builder.setBolt("top-retweet-alltime-bolt",
-				new TopRetweetAllTimeBolt(host, port, capacity), 2)
+				new TopRetweetAllTimeBolt(hostR, portR, capacity), 2)
 				.shuffleGrouping("filter-tweet-bolt", "alltime");
 		builder.setBolt("top-retweet-shortperiod-bolt-24h",
-				new TopRetweetShortPeriodBolt(host, port, capacity, "24h"), 2)
+				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "24h"), 2)
 				.shuffleGrouping("filter-tweet-bolt", "24h");
 		builder.setBolt("top-retweet-shortperiod-bolt-1h",
-				new TopRetweetShortPeriodBolt(host, port, capacity, "1h"), 2)
+				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "1h"), 2)
 				.shuffleGrouping("filter-tweet-bolt", "1h");
 		builder.setBolt("top-retweet-shortperiod-bolt-1m",
-				new TopRetweetShortPeriodBolt(host, port, capacity, "1m"), 2)
+				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "1m"), 2)
 				.shuffleGrouping("filter-tweet-bolt", "1m");
-		builder.setBolt("index-twitter-pic-bolt", new IndexTwitterPicBolt(), 1)
-				.shuffleGrouping("filter-tweet-bolt", "pic");
-		builder.setBolt("reap-bolt", new ReapBolt(host, port), 1)
-				.shuffleGrouping("timer-spout");
+		builder.setBolt("index-twitter-pic-bolt",
+				new IndexTwitterPicBolt(hostES, portES), 1).shuffleGrouping(
+				"filter-tweet-bolt", "pic");
+		builder.setBolt("reap-bolt",
+				new ReapBolt(hostR, portR, hostES, portES), 1).shuffleGrouping(
+				"timer-spout");
 		// configure and submit
 		Config conf = new Config();
 		conf.setDebug(false);
