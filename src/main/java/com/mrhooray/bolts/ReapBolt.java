@@ -18,9 +18,12 @@ public class ReapBolt extends BaseBasicBolt {
 	private long h_24 = 86400000;
 	private long h_1 = 3600000;
 	private long m_1 = 60000;
+	private double indexSizeInGB = 1;
 
-	public ReapBolt(String hostR, int portR, String hostES, int portES) {
+	public ReapBolt(String hostR, int portR, String hostES, int portES,
+			double indexSizeInGB) {
 		pool = RedisHelper.getPool(hostR, portR);
+		this.indexSizeInGB = indexSizeInGB;
 		client = ElasticSearchHelper.getClient(hostES, portES);
 	}
 
@@ -29,7 +32,7 @@ public class ReapBolt extends BaseBasicBolt {
 		RedisHelper.reap(pool, h_24, "24h");
 		RedisHelper.reap(pool, h_1, "1h");
 		RedisHelper.reap(pool, m_1, "1m");
-		ElasticSearchHelper.reap(client, 5);
+		ElasticSearchHelper.reap(client, indexSizeInGB);
 	}
 
 	@Override

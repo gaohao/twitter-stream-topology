@@ -103,7 +103,7 @@ public class ElasticSearchHelper extends BaseHelper implements Serializable {
 		}
 	}
 
-	public static void reap(Client client, int sizeLimitInGB) {
+	public static void reap(Client client, double sizeLimitInGB) {
 		IndicesStats stats = client.admin().indices().prepareStats()
 				.setIndices(index).execute().actionGet();
 		double sizeInGB = stats.index(index).getTotal().getStore().getSize()
