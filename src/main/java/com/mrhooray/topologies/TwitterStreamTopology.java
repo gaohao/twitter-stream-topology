@@ -1,5 +1,10 @@
 package com.mrhooray.topologies;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
@@ -21,19 +26,21 @@ import com.mrhooray.spouts.TwitterStreamSpout;
 
 public class TwitterStreamTopology {
 
-	public static String consumerKey = null;
-	public static String consumerSecret = null;
-	public static String accessToken = null;
-	public static String accessTokenSecret = null;
-	public static String hostR = "localhost";
-	public static String hostES = "localhost";
-	public static int portR = 16379;
-	public static int portES = 19300;
-	public static int capacity = 100;
-	public static double indexSizeInGB = 10;
+	private static String consumerKey = null;
+	private static String consumerSecret = null;
+	private static String accessToken = null;
+	private static String accessTokenSecret = null;
+	private static String hostRedis = null;
+	private static String hostES = null;
+	private static int portRedis = -1;
+	private static int portES = -1;
+	private static boolean isGardenHose = false;
+	private static int capacity = -1;
+	private static double indexSizeInGB = -1;
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		parseArguments(args);
+		parseConfig();
 
 		TopologyBuilder builder = new TopologyBuilder();
 		// spout
@@ -47,23 +54,27 @@ public class TwitterStreamTopology {
 				new DeleteTwitterPicBolt(hostES, portES), 1).shuffleGrouping(
 				"tweets-spout", "ondelete");
 		builder.setBolt("top-retweet-alltime-bolt",
-				new TopRetweetAllTimeBolt(hostR, portR, capacity), 2)
+				new TopRetweetAllTimeBolt(hostRedis, portRedis, capacity), 2)
 				.shuffleGrouping("filter-tweet-bolt", "alltime");
-		builder.setBolt("top-retweet-shortperiod-bolt-24h",
-				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "24h"), 2)
-				.shuffleGrouping("filter-tweet-bolt", "24h");
-		builder.setBolt("top-retweet-shortperiod-bolt-1h",
-				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "1h"), 2)
-				.shuffleGrouping("filter-tweet-bolt", "1h");
-		builder.setBolt("top-retweet-shortperiod-bolt-1m",
-				new TopRetweetShortPeriodBolt(hostR, portR, capacity, "1m"), 2)
-				.shuffleGrouping("filter-tweet-bolt", "1m");
+		builder.setBolt(
+				"top-retweet-shortperiod-bolt-24h",
+				new TopRetweetShortPeriodBolt(hostRedis, portRedis, capacity,
+						"24h"), 2).shuffleGrouping("filter-tweet-bolt", "24h");
+		builder.setBolt(
+				"top-retweet-shortperiod-bolt-1h",
+				new TopRetweetShortPeriodBolt(hostRedis, portRedis, capacity,
+						"1h"), 2).shuffleGrouping("filter-tweet-bolt", "1h");
+		builder.setBolt(
+				"top-retweet-shortperiod-bolt-1m",
+				new TopRetweetShortPeriodBolt(hostRedis, portRedis, capacity,
+						"1m"), 2).shuffleGrouping("filter-tweet-bolt", "1m");
 		builder.setBolt("index-twitter-pic-bolt",
 				new IndexTwitterPicBolt(hostES, portES), 1).shuffleGrouping(
 				"filter-tweet-bolt", "pic");
-		builder.setBolt("reap-bolt",
-				new ReapBolt(hostR, portR, hostES, portES, indexSizeInGB), 1)
-				.shuffleGrouping("timer-spout");
+		builder.setBolt(
+				"reap-bolt",
+				new ReapBolt(hostRedis, portRedis, hostES, portES,
+						indexSizeInGB), 1).shuffleGrouping("timer-spout");
 		// configure and submit
 		Config conf = new Config();
 		conf.setDebug(false);
@@ -75,11 +86,9 @@ public class TwitterStreamTopology {
 		// cluster.shutdown();
 	}
 
-	public static void parseArguments(String[] args) {
+	private static void parseArguments(String[] args) {
 		Options opts = new Options();
 		opts.addOption("h", "help", false, "show options");
-		opts.addOption("s", "size", true,
-				"max size of elasticsearch index in GB");
 		opts.addOption("g", "gardenhose", false,
 				"use gardenhose level of access");
 		BasicParser parser = new BasicParser();
@@ -91,29 +100,49 @@ public class TwitterStreamTopology {
 				hf.printHelp("options", opts);
 				System.exit(0);
 			}
-			if (cl.hasOption('s')) {
-				indexSizeInGB = Double.parseDouble(cl.getOptionValue("s"));
-			}
 			if (cl.hasOption('g')) {
-				// Garden Hose Access Level
-				consumerKey = "ZbVRenq6eWoajY6XUZjrrQ";
-				consumerSecret = "x5StK9aqX8LfFAUIKrAOeRVFb0autLF6rquNOVRLk";
-				accessToken = "280466939-GH7xhmrK4CG89cJ8SeQtBTcOs0BNRzOACRL4DX5C";
-				accessTokenSecret = "0k2Dfd8vJwjmAIkE34GeixnCrqIVoxoSg6DkHPpE";
+				isGardenHose = true;
 			} else {
-				// Default Access Level
-				consumerKey = "KRUyRf2ILVsNiAQhGVkROw";
-				consumerSecret = "y0H4D6p5bsvcZWti0MMsJywRn5HYnXXYvGs1dlQ15A";
-				accessToken = "1068889405-a3CPN1s6HJK4nxgeIXfcDIPU5sVBbft3nr9Xvo";
-				accessTokenSecret = "989IWliREBgkJVRglL0lZXDNpPf7tcI7PihY7sY";
+				isGardenHose = false;
 			}
 		} catch (ParseException e) {
 			HelpFormatter hf = new HelpFormatter();
 			hf.printHelp("options", opts);
 			System.exit(0);
-		} catch (NumberFormatException e) {
-			System.out.println("argument error: size of index must be numeric");
+		}
+	}
+
+	private static void parseConfig() {
+		Properties prop = new Properties();
+		try {
+			InputStream in = new FileInputStream("config.properties");
+			prop.load(in);
+			if (isGardenHose) {
+				consumerKey = prop.getProperty("consumerKeyGardenHose");
+				consumerSecret = prop.getProperty("consumerSecretGardenHose");
+				accessToken = prop.getProperty("accessTokenGardenHose");
+				accessTokenSecret = prop
+						.getProperty("accessTokenSecretGardenHose");
+			}
+			consumerKey = prop.getProperty("consumerKey");
+			consumerSecret = prop.getProperty("consumerSecret");
+			accessToken = prop.getProperty("accessToken");
+			accessTokenSecret = prop.getProperty("accessTokenSecret");
+
+			hostRedis = prop.getProperty("hostRedis");
+			hostES = prop.getProperty("hostES");
+			portRedis = Integer.valueOf(prop.getProperty("portRedis"));
+			portES = Integer.valueOf(prop.getProperty("portES"));
+			capacity = Integer.valueOf(prop.getProperty("capacity"));
+			indexSizeInGB = Double.valueOf(prop.getProperty("indexSizeInGB"));
+			in.close();
+		} catch (IOException e) {
+			System.out.println("Missing config file.");
+			System.exit(0);
+		} catch (Exception e) {
+			System.out.println("Error when parsing config file.");
 			System.exit(0);
 		}
+
 	}
 }

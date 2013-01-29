@@ -1,5 +1,6 @@
 target
 logs
+config.properties
 
 .DS_Store
 .DS_Store?
