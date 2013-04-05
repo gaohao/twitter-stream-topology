@@ -32,5 +32,4 @@ public class TimerSpout extends BaseRichSpout {
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields("reap"));
 	}
-
 }
